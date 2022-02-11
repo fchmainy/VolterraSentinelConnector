@@ -21,7 +21,7 @@ You should also have your **tenant** and your **namespace**
 ### Get the connection string from your storage account
 
 ```Powershell
-az storage account show-connection-string -g *myRG* -n *mystorageaccount*
+az storage account show-connection-string -g myRG -n mystorageaccount
 {
   "connectionString": "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=mystorageaccount;AccountKey=MYACCOUNTKEY=="
 }
