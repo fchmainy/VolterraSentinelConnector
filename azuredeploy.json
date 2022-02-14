@@ -214,7 +214,6 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', variables('FunctionName'))]",
-                "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]",
                 "[resourceId('Microsoft.Insights/components', variables('FunctionName'))]"
             ],
             "kind": "functionapp",
