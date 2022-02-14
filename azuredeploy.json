@@ -243,7 +243,7 @@
                           {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
                             "value": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionName')), '2018-05-01-preview').instrumentationKey]"
-                            }
+                           }
                     ]
                 }
             },
