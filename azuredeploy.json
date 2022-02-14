@@ -16,7 +16,7 @@
             "type": "string",
             "defaultValue": "Volterra Namespace"
         },
-        "authToken": {
+        "AUTH_TOKEN": {
             "type": "securestring",
             "defaultValue": "Volterra REST API Authentication Token"
         },
@@ -97,7 +97,7 @@
                 "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
             ],
             "properties": {
-                "value": "[parameters('authToken')]",
+                "value": "[parameters('AUTH_TOKEN')]",
                 "contentType": "string",
                 "attributes": {
                     "enabled": true
