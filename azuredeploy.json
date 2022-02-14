@@ -38,7 +38,7 @@
         }        
     },
     "variables": {
-            "Name": "f5dc_",
+            "Name": "f5dc",
             "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id))]",
             "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id)))]",
             "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id))]"
