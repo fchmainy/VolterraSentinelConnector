@@ -40,7 +40,7 @@
     "variables": {
             "Name": "Volterra",
             "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id, subscription().id))]",
-            "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id, subscription().id)))]",
+            "StorageAccountName": "[tolower(concat(variables('Name'), uniqueString(resourceGroup().id, subscription().id)))]",
             "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id, subscription().id))]"
     },
     "resources": [
