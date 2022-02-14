@@ -16,7 +16,7 @@
             "type": "string",
             "defaultValue": "Volterra Namespace"
         },
-        "AUTH_TOKEN": {
+        "authToken": {
             "type": "securestring",
             "defaultValue": "Volterra REST API Authentication Token"
         },
@@ -24,7 +24,7 @@
             "type": "string",
             "defaultValue": "Azure Log Analytics Workspace ID"
         },
-        "WORKSPACE_KEY": {
+        "workspaceKey": {
             "type": "securestring",
             "defaultValue": "Azure Log Analytics Workspace Key"
         },
@@ -74,7 +74,7 @@
                     "bypass": "AzureServices"
                 },
                 "tenantId": "[subscription().tenantId]",
-                "enabledForDeployment": false,
+                "enabledForDeployment": true,
                 "enabledForDiskEncryption": false,
                 "enabledForTemplateDeployment": true,
                 "enableSoftDelete": true,
@@ -92,12 +92,12 @@
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2019-09-01",
-            "name": "[concat(variables('KeyVaultName'), '/', 'AUTH_TOKEN')]",
+            "name": "[concat(variables('KeyVaultName'), '/', 'authToken')]",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
             ],
             "properties": {
-                "value": "[parameters('AUTH_TOKEN')]",
+                "value": "[parameters('authToken')]",
                 "contentType": "string",
                 "attributes": {
                     "enabled": true
@@ -107,12 +107,12 @@
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2019-09-01",
-            "name": "[concat(variables('KeyVaultName'), '/', 'WORKSPACE_KEY')]",
+            "name": "[concat(variables('KeyVaultName'), '/', 'workspaceKey')]",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
             ],
             "properties": {
-                "value": "[parameters('WORKSPACE_KEY')]",
+                "value": "[parameters('workspaceKey')]",
                 "contentType": "string",
                 "attributes": {
                     "enabled": true
@@ -258,21 +258,21 @@
                     "dependsOn": [
                         "[resourceId('Microsoft.Web/sites', variables('functionName'))]",
                         "[resourceId('Microsoft.KeyVault/vaults/', variables('KeyVaultName'))]",
-                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'AUTH_TOKEN')]",
-                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'WORKSPACE_KEY')]"
+                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'authToken')]",
+                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'workspaceKey')]"
                     ],
                     "properties": {
                         // Volterra variables
                         "VOLTERRA_TENANT": "[parameters('VOLTERRA_TENANT')]",
-                        "AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'AUTH_TOKEN')).SecretUriWithVersion, ')')]",
-                        //"AUTH_TOKEN": "[parameters('AUTH_TOKEN')]",
+                        "AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'authToken')).SecretUriWithVersion, ')')]",
+                        //"authToken": "[parameters('authToken')]",
                         "VOLTERRA_NAMESPACE": "[parameters('VOLTERRA_NAMESPACE')]",
                         "LOG_TYPE": "[parameters('LOG_TYPE')]",
 
                         // Azure Log Analytics variables
                         "WORKSPACE_ID": "[parameters('WORKSPACE_ID')]",
-                        "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'WORKSPACE_KEY')).SecretUriWithVersion, ')')]",
-                        //"WORKSPACE_KEY": "[parameters('WORKSPACE_KEY')]",
+                        "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'workspaceKey')).SecretUriWithVersion, ')')]",
+                        //"workspaceKey": "[parameters('workspaceKey')]",
                         "CONNECTION_STRING": "[parameters('CONNECTION_STRING')]",
                         "WEBSITE_RUN_FROM_PACKAGE": "1",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
@@ -288,7 +288,7 @@
                       "[resourceId('Microsoft.Web/sites', variables('functionName'))]"
                     ],
                     "properties": {
-                      "packageUri": "variables('functionPackageURI')"
+                      "packageUri": "[variables('functionPackageURI')]"
                     }
                 }
             ]
