@@ -260,14 +260,14 @@
                         // Volterra variables
                         "VOLTERRA_TENANT": "[parameters('VOLTERRA_TENANT')]",
                         //"AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'AUTH_TOKEN')).SecretUriWithVersion, ')')]",
-                        "AUTH_TOKEN": "[parameters('AUTH_TOKEN')]"
+                        "AUTH_TOKEN": "[parameters('AUTH_TOKEN')]",
                         "VOLTERRA_NAMESPACE": "[parameters('VOLTERRA_NAMESPACE')]",
                         "LOG_TYPE": "[parameters('LOG_TYPE')]",
 
                         // Azure Log Analytics variables
                         "WORKSPACE_ID": "[parameters('WORKSPACE_ID')]",
                         //"WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'WORKSPACE_KEY')).SecretUriWithVersion, ')')]",
-                        "WORKSPACE_KEY": "[parameters('WORKSPACE_KEY')]"
+                        "WORKSPACE_KEY": "[parameters('WORKSPACE_KEY')]",
                         "CONNECTION_STRING": "[parameters('CONNECTION_STRING')]",
                         "WEBSITE_RUN_FROM_PACKAGE": "1",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
