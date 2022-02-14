@@ -228,13 +228,13 @@
                     "properties": {
                         // Volterra variables
                         "VOLTERRA_TENANT": "[parameters('VOLTERRA_TENANT')]",
-                        "AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), variables('AUTH_TOKEN'))).SecretUriWithVersion, ')')]",
+                        "AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), parameters('AUTH_TOKEN'))).SecretUriWithVersion, ')')]",
                         "VOLTERRA_NAMESPACE": "[parameters('VOLTERRA_NAMESPACE')]",
                         "LOG_TYPE": "[parameters('LOG_TYPE')]",
 
                         // Azure Log Analytics variables
                         "WORKSPACE_ID": "[parameters('WORKSPACE_ID')]",
-                        "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), variables('WORKSPACE_KEY'))).SecretUriWithVersion, ')')]",
+                        "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), parameters('WORKSPACE_KEY'))).SecretUriWithVersion, ')')]",
                         "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/fchmainy/VolterraSentinelConnector/raw/master/VolterraSentineConnector.zip?raw=true",
                         "CONNECTION_STRING": "[parameters('CONNECTION_STRING')]"
                     }
