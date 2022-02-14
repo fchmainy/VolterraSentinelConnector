@@ -39,9 +39,9 @@
     },
     "variables": {
             "Name": "Volterra",
-            "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id, subscription().id))]",
-            "StorageAccountName": "[tolower(concat(variables('Name'), uniqueString(resourceGroup().id, subscription().id)))]",
-            "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id, subscription().id))]"
+            "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id))]",
+            "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id)))]",
+            "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id))]"
     },
     "resources": [
         {
@@ -215,7 +215,23 @@
                 "name": "[variables('FunctionName')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('FunctionName'))]",
                 "httpsOnly": true,
-                "clientAffinityEnabled": true
+                "clientAffinityEnabled": true,
+                "siteConfig": {
+                    "appSettings": [
+                            {
+                            "name": "WEBSITE_RUN_FROM_PACKAGE",
+                            "value": "1"
+                          },
+                          {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~2"
+                          },
+                          {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "python"
+                          }
+                    ]
+                }
             },
             "resources": [
                 {
@@ -235,8 +251,18 @@
                         // Azure Log Analytics variables
                         "WORKSPACE_ID": "[parameters('WORKSPACE_ID')]",
                         "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'WORKSPACE_KEY')).SecretUriWithVersion, ')')]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/fchmainy/VolterraSentinelConnector/raw/master/VolterraSentineConnector.zip?raw=true",
                         "CONNECTION_STRING": "[parameters('CONNECTION_STRING')]"
+                    }
+                },
+                {
+                    "apiVersion": "2019-08-01",
+                    "type": "extensions",
+                    "name": "zipdeploy",
+                    "dependsOn": [
+                      "[resourceId('Microsoft.Web/sites', variables('functionName'))]"
+                    ],
+                    "properties": {
+                      "packageUri": "https://github.com/fchmainy/VolterraSentinelConnector/raw/master/VolterraSentineConnector.zip?raw=true"
                     }
                 }
             ]
