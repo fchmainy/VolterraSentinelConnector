@@ -30,3 +30,12 @@ az storage account show-connection-string -g myRG -n mystorageaccount
 ### Run this template:
 
 [![Deploy To Azure](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ffchmainy%2FVolterraSentinelConnector%2Fmain%2Fazuredeploy.json)  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Ffchmainy%2FVolterraSentinelConnector%2Fmain%2Fazuredeploy.json)
+
+
+### Use AZ CLI
+
+```Powershell
+az account set -s {subscriptionID}
+az group create --name {resourceGroupName} --location westEurope
+az deployment group create -g {resourceGroupName} --template-uri https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/azuredeploy.json --parameters @azuredeploy.parameters.json
+```
