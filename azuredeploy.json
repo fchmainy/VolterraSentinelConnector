@@ -232,10 +232,6 @@
                 "siteConfig": {
                     "appSettings": [
                           {
-                            "name": "WEBSITE_RUN_FROM_PACKAGE",
-                            "value": "1"
-                          },
-                          {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
                             "value": "~3"
                           },
@@ -274,7 +270,6 @@
                         "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'workspaceKey')).SecretUriWithVersion, ')')]",
                         //"workspaceKey": "[parameters('workspaceKey')]",
                         "CONNECTION_STRING": "[parameters('CONNECTION_STRING')]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "1",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
                         "FUNCTIONS_WORKER_RUNTIME": "python",
                         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionName')), '2018-05-01-preview').instrumentationKey]"
