@@ -24,7 +24,7 @@
             "type": "string",
             "defaultValue": "Azure Log Analytics Workspace ID"
         },
-        "workspaceKey": {
+        "WORKSPACE_KEY": {
             "type": "securestring",
             "defaultValue": "Azure Log Analytics Workspace Key"
         },
@@ -112,7 +112,7 @@
                 "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
             ],
             "properties": {
-                "value": "[parameters('workspaceKey')]",
+                "value": "[parameters('WORKSPACE_KEY')]",
                 "contentType": "string",
                 "attributes": {
                     "enabled": true
