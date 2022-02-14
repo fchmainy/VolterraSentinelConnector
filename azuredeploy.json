@@ -42,7 +42,7 @@
             "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id))]",
             "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id)))]",
             "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id))]",
-            "functionPackageURI": "https://github.com/fchmainy/VolterraSentinelConnector/raw/master/VolterraSentineConnector.zip?raw=true"
+            "functionPackageURI": "https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/SentinelConnector.zip"
     },
     "resources": [
         {
@@ -327,28 +327,6 @@
             ],
             "properties": {
                 "shareQuota": 5120
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/accessPolicies",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('KeyVaultName'), '/add')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', variables('FunctionName'))]"
-            ],
-            "properties": {
-                "accessPolicies": [
-                    {
-                        "tenantId": "[subscription().tenantId]",
-                        "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('FunctionName')), '2019-08-01', 'full').identity.principalId]",
-                        "permissions": {
-                            "secrets": [
-                                "Get",
-                                "List"
-                            ]
-                        }
-                    }
-                ]
             }
         }
     ]
