@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+        "VOLTERRA_TENANT": {
+            "value": "my-volterra-tenant"
+        },
+        "VOLTERRA_NAMESPACE": {
+            "value": "my-namespace"
+        },
+        "AUTH_TOKEN": {
+            "value": "Volterra-Authorization-Token=="
+        },
+        "WORKSPACE_ID": {
+            "value": "azure-log-analytics-workspace-id",
+        },
+        "WORKSPACE_KEY": {
+            "value": "azure-log-analytics-workspace-key=="
+        },
+        "LOG_TYPE": {
+            "value": "Athena"
+        },
+        "CONNECTION_STRING": {
+            "value": "connection-string=="
+        }
+   }
+}
