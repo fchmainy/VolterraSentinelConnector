@@ -37,5 +37,5 @@ az storage account show-connection-string -g myRG -n mystorageaccount
 ```Powershell
 az account set -s {subscriptionID}
 az group create --name {resourceGroupName} --location westEurope
-az deployment group create -g {resourceGroupName} --template-uri https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/azuredeploy.json --parameters @azuredeploy.parameters.json
+az deployment group create -g {resourceGroupName} --template-uri https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/azuredeploy.json --parameters @parameters.json
 ```
