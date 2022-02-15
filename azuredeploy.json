@@ -270,19 +270,12 @@
                     ],
                     "properties": {
                         "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]",
-
-                        // Volterra variables
                         "VOLTERRA_TENANT": "[parameters('VOLTERRA_TENANT')]",
                         "AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'authToken')).SecretUriWithVersion, ')')]",
-                        //"authToken": "[parameters('authToken')]",
                         "VOLTERRA_NAMESPACE": "[parameters('VOLTERRA_NAMESPACE')]",
                         "LOG_TYPE": "[parameters('LOG_TYPE')]",
-
-                        // Azure Log Analytics variables
                         "WORKSPACE_ID": "[parameters('WORKSPACE_ID')]",
                         "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'workspaceKey')).SecretUriWithVersion, ')')]",
-                        //"workspaceKey": "[parameters('workspaceKey')]",
-                        //"CONNECTION_STRING": "[parameters('CONNECTION_STRING')]",
                         "CONNECTION_STRING": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
                         "FUNCTIONS_WORKER_RUNTIME": "python",
