@@ -38,7 +38,7 @@
         }        
     },
     "variables": {
-            "Name": "f5dc",
+            "Name": "[parameters('LOG_TYPE')]",
             "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id))]",
             "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id)))]",
             "storageResourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
