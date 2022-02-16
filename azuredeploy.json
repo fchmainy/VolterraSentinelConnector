@@ -235,6 +235,10 @@
                 "siteConfig": {
                     "appSettings": [
                           {
+                            "name": "WEBSITE_RUN_FROM_PACKAGE",
+                            "value": "1"
+                          },
+                          {
                             "name": "FUNCTIONS_EXTENSION_VERSION",
                             "value": "~3"
                           },
@@ -279,13 +283,14 @@
                         "CONNECTION_STRING": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
                         "FUNCTIONS_WORKER_RUNTIME": "python",
+                        "WEBSITE_RUN_FROM_PACKAGE": "1",
                         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionName')), '2018-05-01-preview').instrumentationKey]"
                     }
                 },
                 {
                     "apiVersion": "2021-02-01",
                     "type": "extensions",
-                    "name": "MSDeploy",
+                    "name": "ZipDeploy",
                     "dependsOn": [
                       "[resourceId('Microsoft.Web/sites', variables('functionName'))]"
                     ],
