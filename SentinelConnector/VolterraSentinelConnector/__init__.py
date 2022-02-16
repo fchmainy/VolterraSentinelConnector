@@ -41,7 +41,7 @@ def generate_date():
     return (previous_date, current_date)
 
 
-def get_result_request(start_date, end_date, limit):
+def get_result_request(start_date, end_date):
     try:
 
         headers = {
@@ -62,7 +62,7 @@ def get_result_request(start_date, end_date, limit):
                          )
         if r.status_code == 200:
             logging.error("DEBUG: Response is: {}".format(r.json()))
-            events = json.loads(r.text)events = json.loads(r.text)
+            events = json.loads(r.text)
             return events['events']
         elif r.status_code == 401:
             logging.error("The authentication token may be incorrect. Error code: {}".format(r.status_code))
@@ -75,43 +75,38 @@ def get_result_request(start_date, end_date, limit):
 
 
 def get_result(date_range):
-    start_date = time_range[0]
-    end_date = time_range[1]
+    start_date = date_range[0]
+    end_date = date_range[1]
     limit = 1
-    element_count = None
-    global_element_count = 0
-    while element_count != 0:
-        result = get_result_request(start_date, end_date, limit)
-        element_count = len(result.json())
-        if offset == 0 and element_count == 0:
-            logging.info("No events were found. Time period: from {} to {}.".format(from_time,to_time))
-        elif offset != 0 and element_count != 0:
-            logging.info("Processing {} events".format(element_count))
-        
-        if element_count > 0:
-            post_status_code = post_data(workspace_id, workspaceKey, json.dumps(result), log_type)
+    
+    result = get_result_request(start_date, end_date)
+
+    for item in result:
+        json_data = json.loads(item)
+        post_status_code = post_data(workspace_id, workspaceKey, json_data, log_type)
+        logging.warning("Status Code: {}".format(post_status_code))
             
-    logging.info("Processed {} events to Azure Sentinel. Time period: from {} to {}.".format(global_element_count,from_time, to_time))
+    logging.info("Processed {} events to Azure Sentinel. Time period: from {} to {}.".format(len(result),start_date, end_date))
 
 
-def build_signature(workspaceID, workspaceKEY, date, content_length, method, content_type, resource):
+def build_signature(customer_id, shared_key, date, content_length, method, content_type, resource):
     x_headers = 'x-ms-date:' + date
     string_to_hash = method + "\n" + str(content_length) + "\n" + content_type + "\n" + x_headers + "\n" + resource
-    bytes_to_hash = bytes(string_to_hash).encode('utf-8')
-    decoded_key = base64.b64decode(workspaceKEY)
-    encoded_hash = base64.b64encode(hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest()).decode()
-    authorization = "SharedKey {}:{}".format(workspaceID,encoded_hash)
+    bytes_to_hash = bytes(string_to_hash, encoding="utf-8")  
+    decoded_key = base64.b64decode(shared_key)
+    encoded_hash = base64.b64encode(hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest())
+    authorization = "SharedKey {}:{}".format(customer_id,encoded_hash.decode('utf-8'))
     return authorization
 
 
-def post_data(workspaceID, workspaceKEY, body, log_type):
+def post_data(customer_id, shared_key, body, log_type):
     method = 'POST'
     content_type = 'application/json'
     resource = '/api/logs'
     rfc1123date = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
-    content_length = len(body)
-    signature = build_signature(workspaceID, workspaceKEY, rfc1123date, content_length, method, content_type, resource)
-    uri = 'https://' + workspaceID + '.ods.opinsights.azure.com' + resource + '?api-version=2016-04-01'
+    content_length = len(json.dumps(body))
+    signature = build_signature(customer_id, shared_key, rfc1123date, content_length, method, content_type, resource)
+    uri = 'https://' + customer_id + '.ods.opinsights.azure.com' + resource + '?api-version=2016-04-01'
 
     headers = {
         'content-type': content_type,
@@ -120,14 +115,12 @@ def post_data(workspaceID, workspaceKEY, body, log_type):
         'x-ms-date': rfc1123date
     }
 
-    response = requests.post(uri,data=body, headers=headers)
+    response = requests.post(uri,json=body, headers=headers)
+    logging.warning(response.text)
     if (response.status_code >= 200 and response.status_code <= 299):
-        print 'Accepted'
-        print 'Response: ' + str(response)
-        return response.status_code
+        print('Accepted')
     else:
-        print "Response code: {}".format(response.status_code)
-        return None
+        print("Response code: {}".format(response.status_code))
 
 
 def main(timer: func.TimerRequest)  -> None:
