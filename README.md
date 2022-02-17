@@ -11,21 +11,10 @@ You should also have your **tenant** and your **namespace**
 
 
 ### Create a Log Analytics workspace
+get the workspace ID and a Workspace Key for your Log Analytics Workspace.
 
 
 
-### Create a storage account
-
-
-
-### Get the connection string from your storage account
-
-```Powershell
-az storage account show-connection-string -g myRG -n mystorageaccount
-{
-  "connectionString": "DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=mystorageaccount;AccountKey=MYACCOUNTKEY=="
-}
-```
 
 ### Run this template:
 
