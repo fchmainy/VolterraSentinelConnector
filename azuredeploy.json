@@ -1,340 +1,144 @@
-{
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+import requests
+import xmltodict
+import json
+import datetime
+from requests.auth import HTTPBasicAuth
+import azure.functions as func
+import base64
+import hmac
+import hashlib
+import os
+import tempfile
+import logging
+import re
+from .state_manager import StateManager
 
+workspace_id = os.environ['WORKSPACE_ID'] 
+workspaceKey = os.environ['workspaceKey']
+authToken = os.environ['authToken']
+event_limit = 500
 
+volterraTenant = os.environ['VOLTERRA_TENANT']
+namespace = os.environ['VOLTERRA_NAMESPACE']
 
-    "parameters": {
-        "VOLTERRA_TENANT": {
-            "type": "string",
-            "metadata": {
-                "description": "https://{VOLTERRA_TENANT}.console.ves.volterra.io."
-              },
-            "defaultValue": "Volterra Tenant Name"
-        },
-        "VOLTERRA_NAMESPACE": {
-            "type": "string",
-            "defaultValue": "Volterra Namespace"
-        },
-        "AUTH_TOKEN": {
-            "type": "securestring",
-            "defaultValue": "Volterra REST API Authentication Token"
-        },
-        "WORKSPACE_ID": {
-            "type": "string",
-            "defaultValue": "Azure Log Analytics Workspace ID"
-        },
-        "WORKSPACE_KEY": {
-            "type": "securestring",
-            "defaultValue": "Azure Log Analytics Workspace Key"
-        },
-        "LOG_TYPE": {
-            "type": "string",
-            "defaultValue": "Log Identifier in Azure Log Analytics"
-        },
-        "CONNECTION_STRING": {
-            "type": "securestring",
-            "defaultValue": "Azure storage account connection string"
-        }        
-    },
-    "variables": {
-            "Name": "[parameters('LOG_TYPE')]",
-            "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id))]",
-            "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id)))]",
-            "storageResourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-            "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id))]",
-            "functionPackageURI": "https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/SentinelConnector.zip"
-    },
-    "resources": [
-        {
-            "type": "microsoft.insights/components",
-            "apiVersion": "2020-02-02-preview",
-            "name": "[variables('FunctionName')]",
-            "location": "[resourceGroup().location]",
-            "kind": "web",
-            "properties": {
-                "Application_Type": "web",
-                "ApplicationId": "[variables('FunctionName')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults",
-            "apiVersion": "2019-09-01",
-            "name": "[variables('KeyVaultName')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites',variables('functionName'))]"
-            ],
-            "properties": {
-                "sku": {
-                    "family": "A",
-                    "name": "Standard"
-                },
-                "networkAcls": {
-                    "defaultAction": "Allow",
-                    "bypass": "AzureServices"
-                },
-                "tenantId": "[subscription().tenantId]",
-                "enabledForDeployment": true,
-                "enabledForDiskEncryption": false,
-                "enabledForTemplateDeployment": true,
-                "enableSoftDelete": true,
-                "accessPolicies": [
-                    {
-                        "tenantId": "[reference(resourceId('Microsoft.Web/sites', variables('FunctionName')), '2018-02-01', 'Full').identity.tenantId]",
-                        "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('FunctionName')), '2018-02-01', 'Full').identity.principalId]",
-                        "permissions": {
-                            "secrets": [ "Get", "List"]
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2019-09-01",
-            "name": "[concat(variables('KeyVaultName'), '/', 'authToken')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
-            ],
-            "properties": {
-                "value": "[parameters('AUTH_TOKEN')]",
-                "contentType": "string",
-                "attributes": {
-                    "enabled": true
-                }
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2019-09-01",
-            "name": "[concat(variables('KeyVaultName'), '/', 'workspaceKey')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('KeyVaultName'))]"
-            ],
-            "properties": {
-                "value": "[parameters('WORKSPACE_KEY')]",
-                "contentType": "string",
-                "attributes": {
-                    "enabled": true
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2019-06-01",
-            "name": "[variables('StorageAccountName')]",
-            "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "kind": "StorageV2",
-            "properties": {
-                "networkAcls": {
-                    "bypass": "AzureServices",
-                    "virtualNetworkRules": [
-                    ],
-                    "ipRules": [
-                    ],
-                    "defaultAction": "Allow"
-                },
-                "supportsHttpsTrafficOnly": true,
-                "encryption": {
-                    "services": {
-                        "file": {
-                            "keyType": "Account",
-                            "enabled": true
-                        },
-                        "blob": {
-                            "keyType": "Account",
-                            "enabled": true
-                        }
-                    },
-                    "keySource": "Microsoft.Storage"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices",
-            "apiVersion": "2019-06-01",
-            "name": "[concat(variables('StorageAccountName'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
-            ],
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "properties": {
-                "cors": {
-                    "corsRules": [
-                    ]
-                },
-                "deleteRetentionPolicy": {
-                    "enabled": false
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/fileServices",
-            "apiVersion": "2019-06-01",
-            "name": "[concat(variables('StorageAccountName'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
-            ],
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "properties": {
-                "cors": {
-                    "corsRules": [
-                    ]
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2021-02-01",
-            "name": "[variables('FunctionName')]",
-            "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "Y1",
-                "tier": "Dynamic"
-            },
-            "kind": "functionapp",
-            "properties": {
-                "name": "[variables('FunctionName')]",
-                "workerSize": "0",
-                "workerSizeId": "0",
-                "numberOfWorkers": "1"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites",
-            "apiVersion": "2021-02-01",
-            "name": "[variables('FunctionName')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]",
-                "[resourceId('Microsoft.Web/serverfarms', variables('FunctionName'))]",
-                "[resourceId('Microsoft.Insights/components', variables('FunctionName'))]"
-            ],
-            "kind": "functionapp",
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "name": "[variables('FunctionName')]",
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('FunctionName'))]",
-                "httpsOnly": true,
-                "clientAffinityEnabled": true,
-                "alwaysOn": true,
-                "use32BitWorkerProcess": false,
-                "siteConfig": {
-                    "appSettings": [
-                          {
-                            "name": "WEBSITE_RUN_FROM_PACKAGE",
-                            "value": "1"
-                          },
-                          {
-                            "name": "FUNCTIONS_EXTENSION_VERSION",
-                            "value": "~3"
-                          },
-                          {
-                            "name": "FUNCTIONS_WORKER_RUNTIME",
-                            "value": "python"
-                          },
-                          {
-                            "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageResourceId'), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ';')]"
-                          },
-                          {
-                            "name": "CONTAINER_NAME",
-                            "value": "azure-webjobs-secrets"
-                          },
-                          {
-                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionName')), '2018-05-01-preview').instrumentationKey]"
-                           }
-                    ]
-                }
-            },
-            "resources": [
-                {
-                    "apiVersion": "2021-02-01",
-                    "type": "config",
-                    "name": "appsettings",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', variables('functionName'))]",
-                        "[resourceId('Microsoft.KeyVault/vaults/', variables('KeyVaultName'))]",
-                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'authToken')]",
-                        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'workspaceKey')]"
-                    ],
-                    "properties": {
-                        "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]",
-                        "VOLTERRA_TENANT": "[parameters('VOLTERRA_TENANT')]",
-                        "AUTH_TOKEN": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'authToken')).SecretUriWithVersion, ')')]",
-                        "VOLTERRA_NAMESPACE": "[parameters('VOLTERRA_NAMESPACE')]",
-                        "LOG_TYPE": "[parameters('LOG_TYPE')]",
-                        "WORKSPACE_ID": "[parameters('WORKSPACE_ID')]",
-                        "WORKSPACE_KEY": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('KeyVaultName'), 'workspaceKey')).SecretUriWithVersion, ')')]",
-                        "CONNECTION_STRING": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]",
-                        "FUNCTIONS_EXTENSION_VERSION": "~3",
-                        "FUNCTIONS_WORKER_RUNTIME": "python",
-                        "WEBSITE_RUN_FROM_PACKAGE": "1",
-                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', variables('FunctionName')), '2018-05-01-preview').instrumentationKey]"
-                    }
-                },
-                {
-                    "apiVersion": "2021-02-01",
-                    "type": "extensions",
-                    "name": "ZipDeploy",
-                    "dependsOn": [
-                      "[resourceId('Microsoft.Web/sites', variables('functionName'))]"
-                    ],
-                    "properties": {
-                      "packageUri": "[variables('functionPackageURI')]"
-                    }
-                }
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-            "apiVersion": "2019-06-01",
-            "name": "[concat(variables('StorageAccountName'), '/default/azure-webjobs-hosts')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('StorageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
-            ],
-            "properties": {
-                "publicAccess": "None"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-            "apiVersion": "2019-06-01",
-            "name": "[concat(variables('StorageAccountName'), '/default/azure-webjobs-secrets')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('StorageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
-            ],
-            "properties": {
-                "publicAccess": "None"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-            "apiVersion": "2019-06-01",
-            "name": "[concat(variables('StorageAccountName'), '/default/', tolower(variables('FunctionName')))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/fileServices', variables('StorageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('StorageAccountName'))]"
-            ],
-            "properties": {
-                "shareQuota": 5120
-            }
+connection_string = os.environ['CONNECTION_STRING']
+
+log_type = 'LOG_TYPE'
+events_api_endpoint = "https://" + volterraTenant + ".console.ves.volterra.io/api/data/namespaces/" + namespace + "/app_security/events"
+
+logging.info("DEBUG: Volterra Endpoint is {}".format(events_api_endpoint))
+
+def generate_date():
+    current_date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    logging.info("DEBUG: Current date is {}".format(current_date))
+    state = StateManager(connection_string=connection_string)
+    previous_date = state.get()
+    if previous_date is not None:
+        logging.info("DEBUG: The latest time stamp is: {}".format(past_time))
+    else:
+        logging.info("DEBUG: There is no previous timestamp, trying to get events for the last hour.")
+        previous_date = (datetime.datetime.utcnow() - datetime.timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    state.post(current_date)
+    return (previous_date, current_date)
+
+def normalize_json(event_log):
+    event_log['req_headers'] = json.loads(event_log['req_headers'])
+    if event_log['violation_details'] != '':
+        event_log['violation_details'] = json.loads(json.dumps(xmltodict.parse(event_log['violation_details'])))
+    return event_log
+
+def get_result_request(start_date, end_date):
+    try:
+
+        headers = {
+            'Authorization': 'APIToken ' + authToken,
+            'Content-Type': 'application/json'
         }
-    ]
-}
+
+        body = {
+            'start_time': '%s' % start_date,
+            'end_time': '%s' % end_date,
+            'namespace': namespace, 
+            'limit': event_limit
+        }
+
+        r = requests.post(events_api_endpoint,
+                            headers=headers,
+                            json=body
+                         )
+        if r.status_code == 200:
+            logging.error("DEBUG: Response is: {}".format(r.json()))
+            events = json.loads(r.text)
+            return events['events']
+        elif r.status_code == 401:
+            logging.error("The authentication token may be incorrect. Error code: {}".format(r.status_code))
+        elif r.status_code == 403:
+            logging.error("Check permissions. Error code: {}".format(r.status_code))
+        else:
+            logging.error("Something wrong. Error code: {}".format(r.status_code))
+    except Exception as err:
+        logging.error("Something wrong. Exception error text: {}".format(err))
+
+
+def get_result(date_range):
+    start_date = date_range[0]
+    end_date = date_range[1]
+    limit = 1
+    
+    result = get_result_request(start_date, end_date)
+
+    for item in result:
+        json_data = json.loads(item)
+        logging.warning("\n ITEM TYPE: {}\n".format(type(json_data)))
+
+        normalized = normalize_json(json_data)
+        logging.warning("\n Normalized JSON: {}\n".format(normalized))
+
+        post_status_code = post_data(workspace_id, workspaceKey, normalized, log_type)
+        logging.warning("Status Code: {}".format(post_status_code))
+            
+    logging.info("Processed {} events to Azure Sentinel. Time period: from {} to {}.".format(len(result),start_date, end_date))
+
+
+def build_signature(customer_id, shared_key, date, content_length, method, content_type, resource):
+    x_headers = 'x-ms-date:' + date
+    string_to_hash = method + "\n" + str(content_length) + "\n" + content_type + "\n" + x_headers + "\n" + resource
+    bytes_to_hash = bytes(string_to_hash, encoding="utf-8")  
+    decoded_key = base64.b64decode(shared_key)
+    encoded_hash = base64.b64encode(hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest())
+    authorization = "SharedKey {}:{}".format(customer_id,encoded_hash.decode('utf-8'))
+    return authorization
+
+
+def post_data(customer_id, shared_key, body, log_type):
+    method = 'POST'
+    content_type = 'application/json'
+    resource = '/api/logs'
+    rfc1123date = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+    content_length = len(json.dumps(body))
+    signature = build_signature(customer_id, shared_key, rfc1123date, content_length, method, content_type, resource)
+    uri = 'https://' + customer_id + '.ods.opinsights.azure.com' + resource + '?api-version=2016-04-01'
+
+    headers = {
+        'content-type': content_type,
+        'Authorization': signature,
+        'Log-Type': log_type,
+        'x-ms-date': rfc1123date
+    }
+
+    response = requests.post(uri,json=body, headers=headers)
+    logging.warning(response.text)
+    if (response.status_code >= 200 and response.status_code <= 299):
+        print('Accepted')
+    else:
+        print("Response code: {}".format(response.status_code))
+
+
+def main(timer: func.TimerRequest)  -> None:
+    logging.info("DEBUG: Main function")
+    if timer.past_due:
+        logging.info('DEBUG: The timer is past due!')
+    logging.info('DEBUG: Starting program')
+    get_result(generate_date())
+
