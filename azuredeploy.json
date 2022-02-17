@@ -36,7 +36,7 @@
     "variables": {
             "Name": "[parameters('LOG_TYPE')]",
             "Suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
-            "FunctionName": "[concat(variables('Name'), 'func', variables('Suffix')]",
+            "FunctionName": "[concat(variables('Name'), 'func', variables('Suffix'))]",
             "StorageAccountName": "[tolower(concat(variables('Name'), 'stor', variables('Suffix')))]",
             "storageResourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
             "KeyVaultName": "[concat(variables('Name'), 'vault', variables('Suffix'))]",
