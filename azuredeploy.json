@@ -35,10 +35,11 @@
     },
     "variables": {
             "Name": "[parameters('LOG_TYPE')]",
-            "FunctionName": "[concat(variables('Name'), 'func', uniqueString(resourceGroup().id))]",
-            "StorageAccountName": "[tolower(concat(variables('Name'), 'storage', uniqueString(resourceGroup().id)))]",
+            "Suffix": "[substring(uniqueString(resourceGroup().id), 0, 5)]",
+            "FunctionName": "[concat(variables('Name'), 'func', variables('Suffix')]",
+            "StorageAccountName": "[tolower(concat(variables('Name'), 'stor', variables('Suffix')))]",
             "storageResourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-            "KeyVaultName": "[concat(variables('Name'), 'vault', uniqueString(resourceGroup().id))]",
+            "KeyVaultName": "[concat(variables('Name'), 'vault', variables('Suffix'))]",
             "functionPackageURI": "https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/SentinelConnector.zip"
     },
     "resources": [
