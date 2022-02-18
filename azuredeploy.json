@@ -40,7 +40,7 @@
             "StorageAccountName": "[tolower(concat(variables('Name'), 'stor', variables('Suffix')))]",
             "storageResourceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
             "KeyVaultName": "[concat(variables('Name'), 'vault', variables('Suffix'))]",
-            "functionPackageURI": "https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/SentinelConnector.zip"
+            "functionPackageURI": "https://raw.githubusercontent.com/fchmainy/VolterraSentinelConnector/main/f5dcwaap.zip"
     },
     "resources": [
         {
